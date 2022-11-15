@@ -100,11 +100,18 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         float discount = productDTO.getDiscount();
         float afterDiscount = 1 - discount;
         int amount = orderDetailDTO.getAmount();
+        int stockAfterOrder = productDTO.getStock() - amount;
         float total = (float) amount * price * afterDiscount;
         orderDetailDTO.setTotal((int) total);
         UUID id = UUID.randomUUID();
         orderDetailDTO.setId(id.toString());
         orderDetailDTO.setIsDeleted(false);
+        if (stockAfterOrder < 0) {
+            throw new MyException("408","Mount of product in stock not enough!");
+        } else {
+            productDTO.setStock(stockAfterOrder);
+            productService.editProduct(productDTO.getName(), productDTO, true);
+        }
         OrderDetail savedOrderDetail = orderDetailsRepository.save(modelMapper.map(orderDetailDTO, OrderDetail.class));
         return modelMapper.map(savedOrderDetail, OrderDetailDTO.class);
     }
